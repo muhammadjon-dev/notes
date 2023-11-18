@@ -573,5 +573,226 @@ DROP TABLE top_companies;
 ```sql
 DROP TABLE IF EXISTS top_companies;
 ```
+<br>
 
+# Character data types
+
+### PostgreSQL character types
+`character(n)` or `char(n)`
+* fixed length `n`
+* trailing spaces ignored in comparisons
+`character varying(n)` or `varchar(n)`
+* variable length up to a maximum of `n`
+`text` or `varchar`
+* unlimited length
+
+### Alphabetical order
+>-- Results
+>|category | count|
+>|---------|-------|
+>&nbsp;&nbsp;apple | 1
+>Apple | 4
+>Banana | 1
+>apple | 2
+>banana | 3
+>(5 rows)
+
+>-- Alphabetical Order: <br>
+>' ' < 'A' < 'a'
+
+>-- From results <br>
+>' ' < 'A' < 'B' < 'a' < 'b'
+
+## Common issues
+Case matters
+* `'apple' != 'Apple'`
+
+Spaces count
+* `' apple' != 'apple'`
+* `'' != '` &emsp; `'`
+
+Empty strings aren't null
+* `'' != NULL`
+
+Punctuation differences
+* `'to-do' != 'to–do'`
+
+## Cases and Spaces
+#### Converting case
+```sql
+SELECT lower('aBc DeFg 7-');
+```
+>abc defg 7-
+
+```sql
+SELECT upper('aBc DeFg 7-');
+```
+>ABC DEFG 7-
+
+### Case insensitive comparisons
+```sql
+SELECT *
+FROM fruit
+WHERE lower(fav_fruit)='apple';
+```
+>|customer | fav_fruit|
+>|--|--|
+>349 | apple
+>874 | Apple
+>313 | apple
+>418 | apple
+>300 | APPLE
+>(5 rows)                        
+
+### Case insensitive searches
+```sql
+-- Using LIKE
+SELECT *
+FROM fruit
+--
+"apple" in value
+WHERE fav_fruit LIKE '%apple%';
+```
+**for insensitive search:**
+```sql
+-- Using ILIKE
+SELECT *
+FROM fruit
+-- ILIKE for case insensitive
+WHERE fav_fruit ILIKE '%apple%';
+```
+
+### Trimming spaces
+
+```sql
+SELECT trim(' abc ');
+```
+* `trim` or `btrim` : **b**oth ends
+    * `trim(' abc ')` = `'abc'`
+* `rtrim` : **r**ight end
+    * `rtrim(' abc ')` = `' abc'`
+* `ltrim` : **l**eft start
+    * `ltrim(' abc ')` = `'abc '`
+
+### Trimming other values
+```sql
+SELECT trim('Wow!','!');
+```
+>Wow
+```sql
+SELECT trim('Wow!','!wW');
+```
+>o
+
+### Combining functions
+```sql
+SELECT trim(lower('Wow!'), '!w');
+```
+>o
+
+## Substring
+```sql
+SELECT left('abcde', 2), -- first 2 characters
+right('abcde', 2); -- last 2 characters
+```
+>|left | right|
+>|-|-|
+>ab | de
+```sql
+SELECT left('abc', 10),
+    length(left('abc', 10));
+```
+>|left | length|
+>|-|-|
+>abc | 3
+
+--- 
+<br>
+
+---
+### substring()
+
+```sql
+SELECT substring(string FROM start FOR length);
+```
+```sql
+SELECT substring('abcdef' FROM 2 FOR 3);
+```
+>bcd
+```sql
+SELECT substr('abcdef', 2, 3);
+```
+
+## Delimiters
+>some text,more text,still more text
+><br>&emsp;&emsp;&emsp;&emsp;^ &emsp;&emsp;&emsp;&nbsp;&nbsp;^
+><br>&emsp;&emsp;&emsp;delimiter delimiter
+
+Fields/chunks:
+1. some text
+2. more text
+3. still more text
+
+**Splitting on a delimiter**
+```sql
+SELECT split_part(string, delimiter, part);
+```
+```sql
+SELECT split_part('a,bc,d',',', 2);
+```
+>bc
+
+<br>
+
+```sql
+SELECT split_part('cats and dogs and fish',' and ', 1);
+```
+>cats    
+
+## Concatenating text
+```sql
+SELECT concat('a', 2,'cc');
+```
+>a2cc
+```sql
+SELECT 'a' || 2 || 'cc';
+```
+>a2cc
+```sql
+SELECT concat('a', NULL,'cc');
+```
+>acc
+```sql
+SELECT 'a' || NULL || 'cc';
+```
+>&nbsp;
+
+---
+<br>
+
+## UPDATE values
+**syntax**
+```sql
+UPDATE table_name
+    SET column_name = new_value
+WHERE condition;
+```
+
+**examples**
+```sql
+-- All rows: lower case, remove white space on ends
+UPDATE recode
+    SET standardized=trim(lower(original));
+```
+```sql
+-- Specific rows: correct a misspelling
+UPDATE recode
+    SET standardized='banana'
+WHERE standardized LIKE '%nn%';
+```
+```sql
+-- All rows: remove any s
+UPDATE recode
+SET standardized=rtrim(standardized,'s');
+```
 
