@@ -796,3 +796,183 @@ UPDATE recode
 SET standardized=rtrim(standardized,'s');
 ```
 
+# Date/time types and formats
+### Main types
+`date`
+* YYYY-MM-DD
+* example: 2018-12-30
+
+`timestamp`
+* YYYY-MM-DD HH:MM:SS
+* example: 2018-12-30 131004.3
+
+**Intervals**
+
+`interval` examples:
+>6 days 01:48:08
+
+>00:51:03
+
+>1 day 21:57:47
+><br><br>07:48:46<br><br>
+>406 days 00:31:56
+
+### **ISO 8601**
+
+ISO = International Organization for Standards
+<br>**YYYY-MM-DD HH:MM:SS**<br>
+Example: 2018-01-05 093515
+
+### **UTC and timezones**
+UTC = Coordinated Universal Time
+<br>Timestamp with timezone:
+<br>**YYYY-MM-DD HH:MM:SS+HH**
+<br>Example: 2004-10-19 102354+02
+
+### Date and time comparisons
+Compare with `>` , `<` , `=`
+```sql
+SELECT '2018-01-01' > '2017-12-31';
+```
+`now()` : current timestamp
+```sql
+SELECT now() > '2017-12-31';
+```
+
+### Date subtraction
+```sql
+SELECT now() - '2018-01-01';
+```
+>343 days 21:26:32.710898
+```sql
+SELECT now() - '2015-01-01';
+```
+>1439 days 21:32:22.616076
+
+### Date addition
+```sql
+SELECT '2010-01-01'::date + 1;
+```
+>2010-01-02
+```sql
+SELECT '2018-12-10'::date + '1 year'::interval;
+```
+>2019-12-10 00:00:00
+```sql
+SELECT '2018-12-10'::date + '1 year 2 days 3 minutes'::interval ; 
+```
+>2019-12-12 00:03:00
+
+## Common date/time fields
+***<p style="color: #3498db;">Date/Time Functions and Operators Documentation</p>***
+**Fields**
+* century: 2019-01-01 = century 21
+* decade: 2019-01-01 = decade 201
+* year, month, day
+* hour, minute, second
+* week
+* dow: day of week
+
+## Extracting fields
+```sql
+-- functions to extract datetime fields
+
+date_part('field', timestamp)
+
+EXTRACT(FIELD FROM timestamp)
+```
+-- now is 2023-11-18 19:28:44.494818+01
+```sql
+SELECT date_part('month', now()),
+    EXTRACT(MONTH FROM now());
+```
+>|date_part | date_part|
+>|-|-|
+>11 | 11
+
+## Truncating dates
+```sql
+date_trunc('field', timestamp)
+```
+```sql
+-- now() is 2023-11-18 19:31:54.494808+01
+SELECT date_trunc('month', now());
+```
+>|date_trunc|
+>|-|
+>2023-11-01 00:00:00+01
+
+## Generate series
+```sql
+SELECT generate_series(from, to, interval);
+```
+```sql
+SELECT generate_series('2018-01-01',
+                       '2018-01-15',
+                       '2 days'::interval);
+```
+>|generate_series|
+>|-|
+>2018-01-01 00:00:00
+>2018-01-03 00:00:00
+>2018-01-05 00:00:00
+>2018-01-07 00:00:00
+>2018-01-09 00:00:00
+>2018-01-11 00:00:00
+>2018-01-13 00:00:00
+>2018-01-15 00:00:00
+>(8 rows)
+
+```sql
+SELECT generate_series('2018-01-01','2018-01-02','5 hours'::interval);
+```
+>|generate_series|
+>|-|
+>2018-01-01 00:00:00
+>2018-01-01 05:00:00
+>2018-01-01 10:00:00
+>2018-01-01 15:00:00
+>2018-01-01 20:00:00
+>(5 rows)
+
+## Lead and lag
+```sql
+SELECT date,
+       lag(date) OVER (ORDER BY date),
+       lead(date) OVER (ORDER BY date)
+FROM sales;
+```
+
+>|date | lag | lead|
+>|-|-|-|
+>|2018-04-23 09:07:33 | | 2018-04-23 09:13:14
+>2018-04-23 09:13:14 | 2018-04-23 09:07:33 | 2018-04-23 09:35:16
+>2018-04-23 09:35:16 | 2018-04-23 09:13:14 | 2018-04-23 10:12:35
+>2018-04-23 10:12:35 | 2018-04-23 09:35:16 | 
+
+### Time between events
+```sql
+SELECT date,
+       date - lag(date) OVER (ORDER BY date) AS gap
+FROM sales;
+```
+
+>|date | gap|
+>|-|-|
+>2018-04-23 09:07:33 |
+>2018-04-23 09:13:14 | 00:05:41
+>2018-04-23 09:35:16 | 00:22:02
+>2018-04-23 10:12:35 | 00:37:19
+
+### Average time between events
+```sql
+SELECT avg(gap)
+    FROM (SELECT date - lag(date) OVER (ORDER BY date) AS gap
+        FROM sales) AS gaps;
+```
+
+>|avg|
+>|-|
+>00:32:15.555556
+>(1 row)
+
