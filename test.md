@@ -13,12 +13,12 @@
 _This text_ is italic
 
 <!-- strong -->
-**This text** is italic
+**This text** is strong
 
-__This text__ is italic
+__This text__ is strong
 
 <!-- strikethrough -->
-~~This text~~ is italic
+~~This text~~ is strikethrough
 
 <!-- horizontal rule -->
 
