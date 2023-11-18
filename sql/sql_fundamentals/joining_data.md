@@ -52,4 +52,4 @@ USING(country);
 | Pakistan | Asia | Shehbaz Sharif | Arif Alvi |
 | India | Asia | Narendra Modi | Ram Nath Kovind |
 
-![Alt text](image.png)
+![Alt text](../../imgs/image.png)
