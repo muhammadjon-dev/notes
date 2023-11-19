@@ -62,3 +62,4 @@ FROM courses;
 * `GROUP` BY splits the data up into combinations of one or more values
 * `WHERE` filters on row values
 * `HAVING` appears after the `GROUP BY` clause and filters on groups or aggregates
+
