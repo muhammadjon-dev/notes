@@ -136,3 +136,165 @@ WHERE artist_id IN (1, 4, 5);
 * Alias the column names
 * `UNION` : Discards duplicates (slower to run)
 * `UNION ALL` : Includes duplicates (faster to run)
+
+# CRUD operations
+**C**REATE
+* Databases, Tables or views
+* Users, permissions, and security groups
+
+**R**EAD
+* Example: SELECT statements
+
+**U**PDATE
+* Amend existing database records
+
+**D**ELETE
+
+## CREATE
+* `CREATE TABLE` `unique table name`
+* (column name, data type, size)
+
+```sql
+CREATE TABLE test_table(
+    test_date date,
+    test_name varchar(20),
+    test_int int
+    )
+```
+
+**A few considerations when creating a table**
+* Table and column names
+* Type of data each column will store
+* Size or amount of data stored in the column
+
+### Data types
+Dates:
+* date ( `YYYY-MM-DD` ), datetime ( `YYYY-MM-DD hh:mm:ss` )
+* time
+
+Numeric:
+* integer, decimal, float
+* bit ( `1` = `TRUE` , `0` = `FALSE` . Also accepts `NULL` values)
+
+Strings:
+* `char` , `varchar` , `nvarchar`
+
+## INSERT
+```sql
+INSERT INTO table_name
+```
+```sql
+INSERT INTO table_name (col1, col2, col3)
+```
+```sql
+INSERT INTO table_name (col1, col2, col3)
+VALUES
+    ('value1', 'value2', value3)
+```
+
+### INSERT SELECT
+```sql
+INSERT INTO table_name (col1, col2, col3)
+SELECT
+    column1,
+    column2,
+    column3
+FROM other_table
+WHERE
+    -- conditions apply
+```
+* Don't use `SELECT *`
+* Be specific in case table structure changes
+
+## UPDATE
+```sql
+UPDATE table
+SET column = value
+WHERE
+-- Condition(s);
+```
+* Don't forget the `WHERE` clause!
+```sql
+UPDATE table
+SET
+    column1 = value1,
+    column2 = value2
+WHERE
+-- Condition(s);
+```
+
+## DELETE
+```sql
+DELETE
+FROM table
+WHERE
+    -- Conditions
+```
+* Test beforehand!
+```sql
+TRUNCATE TABLE table_name
+```
+* Clears the entire table at once
+
+## Variables
+
+### Declare
+```sql
+DECLARE @name type_data
+```
+Integer variable:
+```sql
+DECLARE @test_int INT
+```
+Varchar variable:
+```sql
+DECLARE @my_artist VARCHAR(100)
+```
+
+### SET
+Integer variable:
+```sql
+DECLARE @test_int INT
+
+SET @test_int = 5
+```
+
+Assign value to @my_artist :
+```sql
+DECLARE @my_artist varchar(100)
+
+SET @my_artist = 'AC/DC'
+```
+
+### Example
+
+```sql
+DECLARE @my_artist varchar(100)
+DECLARE @my_album varchar(300);
+
+SET @my_artist = 'AC/DC'
+SET @my_album = 'Let There Be Rock' ;
+
+SELECT --
+FROM --
+WHERE artist = @my_artist
+AND album = @my_album;
+```
+
+## Temporary tables
+```sql
+SELECT
+    col1,
+    col2,
+    col3 INTO #my_temp_table
+FROM my_existing_table
+WHERE
+    -- Conditions
+```
+* #my_temp_table exists until connection or session ends
+
+```sql
+-- Remove table manually
+DROP TABLE #my_temp_table
+```
+
