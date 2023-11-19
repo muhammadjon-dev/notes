@@ -5,7 +5,7 @@ description,
 LEN(description) AS description_length
 FROM grid;
 ```
-`NOTE: `In PostgreSQL `LENGTH (description)`
+`NOTE:` In PostgreSQL `LENGTH (description)`
 >description | description_length |
 >|---------|--------------------|
 >| Severe Weather Thunderstorms | 29 |
