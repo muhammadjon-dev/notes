@@ -693,7 +693,7 @@ SELECT trim(lower('Wow!'), '!w');
 ## Substring
 ```sql
 SELECT left('abcde', 2), -- first 2 characters
-right('abcde', 2); -- last 2 characters
+       right('abcde', 2); -- last 2 characters
 ```
 >|left | right|
 >|-|-|
