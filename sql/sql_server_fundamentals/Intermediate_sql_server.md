@@ -286,3 +286,140 @@ SELECT LOG(0, 10)
 
 An invalid floating point operation occurred.
 ```
+
+# WHILE Loops
+
+## Variables in T-SQL 
+
+* Variables are needed to set values `DECLARE @variablename data_type`
+    * Must start with the character @
+
+### Variable data types in T-SQL
+* `VARCHAR(n)` : variable length text eld
+* `INT` : integer values from -2,147,483,647 to +2,147,483,647
+* `DECIMAL(p ,s)` or `NUMERIC(p ,s)` :
+    * `p` : total number of decimal digits that will be stored, both to the le and to the right of
+the decimal point
+    * `s` : number of decimal digits that will be stored to the right of the decimal point
+
+### Declaring variables in T-SQL
+```sql
+-- Declare Snack as a VARCHAR with length 10
+DECLARE @Snack VARCHAR(10)
+```
+
+### Assigning values to variables
+
+```sql
+-- Declare the variable
+DECLARE @Snack VARCHAR(10)
+-- Use SET a value to the variable
+SET @Snack = 'Cookies'
+
+-- OR 
+
+-- Use SELECT assign a value
+SELECT @Snack = 'Candy'
+```
+
+## WHILE Loops
+
+### Syntax:
+
+```sql
+-- declare iter as an integer
+DECLARE @iter INT
+
+-- assign 1 to iter 
+SET @iter = 1
+
+-- condition for loop
+WHILE @iter < 10 /* <- condition*/
+
+    -- Begin the code inside the loop
+    BEGIN
+        -- write code
+        SET @iter = @iter + 1
+        -- end the loop
+    END
+
+-- let's see the value after the loop
+SELECT @iter
+     
+```
+
+>|(No column name) |
+>|-|
+>|10 |
+
+---
+<br>
+
+* You can use `BREAK` to stop the loop or `CONTINUE` to continue the loop
+
+```sql
+DECLARE @ctr INT
+
+SET @ctr = 1
+
+WHILE @ctr < 10
+
+    BEGIN
+        SET @ctr = @ctr + 1
+
+        IF @ctr = 4
+        -- When ctr is equal to 4, the loop will stop
+        BREAK
+    -- End WHILE loop
+    END
+```
+
+## Derived tables  in T-SQL
+
+### What are Derived tables?
+* Query which is treated like a temporary table
+* Always contained within the main query
+* They are specied in the FROM clause
+* Can contain intermediate calculations to be used the main query or dierent joins than in the main query
+
+```SQL
+
+SELECT a.* FROM Kidney AS a
+-- This derived table computes the Average age joined to the actual table
+JOIN (SELECT AVG(Age) AS AverageAge
+      FROM Kidney) AS b
+ON a.Age = b.AverageAge
+
+```
+
+## CTEs in T-SQL
+### CTE syntax
+```SQL
+-- CTE definitions start with the keyword WITH
+-- Followed by the CTE names and the columns it contains
+WITH CTEName (Col1, Col2)
+AS
+-- Define the CTE query
+(
+-- The two columns from the definition above
+    SELECT Col1, Col2
+    FROM TableName
+)
+```
+**Example:**
+```SQL
+-- Create a CTE to get the Maximum BloodPressure by Age
+WITH BloodPressureAge(Age, MaxBloodPressure)
+AS
+(SELECT Age, MAX(BloodPressure) AS MaxBloodPressure
+FROM Kidney
+GROUP BY Age)
+
+-- Create a query to use the CTE as a table
+SELECT a.Age, MIN(a.BloodPressure), b.MaxBloodPressure
+FROM Kidney a
+-- Join the CTE with the table
+JOIN BloodpressureAge b
+    ON a.Age = b.Age
+GROUP BY a.Age, b.MaxBloodPressure
+```
