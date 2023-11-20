@@ -423,3 +423,297 @@ JOIN BloodpressureAge b
     ON a.Age = b.Age
 GROUP BY a.Age, b.MaxBloodPressure
 ```
+
+# WINDOW Functions in T-SQL 
+
+## Window syntax in T-SQL
+* Create the window with OVER clause
+* PARTITION BY creates the frame
+* If you do not include PARTITION BY the frame is the entire table
+* To arrange the results, use ORDER BY
+* Allows aggregations to be created at the same time as the window
+```SQL
+. . .
+-- Create a Window data grouping
+OVER (PARTITION BY SalesYear ORDER BY SalesYear)
+```
+
+### Window functions (SUM)
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    SUM(CurrentQuota)
+    OVER (PARTITION BY SalesYear) AS YearlyTotal,
+    ModifiedDate AS ModDate
+FROM SaleGoal
+```
+>|SalesPerson |SalesYear |CurrentQuota |YearlyTotal | ModDate |
+>|-|-|-|-|-
+>|Bob |2011 |28000.00 |1551000.00 |2011-04-16|
+>|Bob |2011 |7000.00 |1551000.00 |2011-07-17|
+>|Mary |2011 |367000.00 |1551000.00 |2011-04-16|
+>|Mary |2011 |556000.00 |1551000.00 |2011-07-15|
+>|Bob |2012 |70000.00 |1859000.00 |2012-01-15|
+>|Bob |2012 |154000.00 |1859000.00 |2012-04-16|
+>|Bob |2012 |107000.00 |1859000.00 |2012-07-16|
+>|. .   .   .   .|
+
+### Window functions (COUNT)
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    COUNT(CurrentQuota)
+    OVER (PARTITION BY SalesYear) AS QuotaPerYear,
+    ModifiedDate AS ModDate
+FROM SaleGoal
+```
+>|SalesPerson |SalesYear |CurrentQuota |QuotaPerYear | ModDate |
+>|-|-|-|-|-
+>|Bob |2011 |28000.00 |4 |2011-04-16|
+>|Bob |2011 |7000.00 |4 |2011-07-17|
+>|Mary |2011 |367000.00 |4 |2011-04-16|
+>|Mary |2011 |556000.00 |4 |2011-07-15|
+>|Bob |2012 |70000.00 |8 |2012-01-15|
+>|Bob |2012 |154000.00 |8 |2012-04-16|
+>|Bob |2012 |107000.00 |8 |2012-07-16|
+>|. .   .   .   .|
+
+## FIRST_VALUE() and LAST_VALUE()
+* `FIRST_VALUE()` returns the first value in the window
+* `LAST_VALUE()` returns the last value in the window
+
+* **`Note`** that for `FIRST_VALUE` and `LAST_VALUE` the ORDER BY command is required
+```SQL
+-- Select the columns
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    -- First value from every window
+    FIRST_VALUE(CurrentQuota)
+    OVER (PARTITION BY SalesYear ORDER BY ModifiedDate) AS StartQuota,
+    -- Last value from every window
+    LAST_VALUE(CurrentQuota)
+    OVER (PARTITION BY SalesYear ORDER BY ModifiedDate) AS EndQuota,
+    ModifiedDate as ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|StartQuota| EndQuota |ModDate |
+>|-|-|-|-|-|-|
+>|Bob |2011 |28000.00 |28000.00 |91000.00 |2011-04-16|
+>|Bob |2011 |7000.00 |28000.00 |91000.00 |2011-07-17|
+>|Bob |2011 |91000.00 |28000.00 |91000.00 |2011-10-17|
+>|Bob |2012 |140000.00 |140000.00 |107000.00 |2012-01-15|
+>|Bob |2012 |70000.00 |140000.00 |107000.00 |2012-04-15|
+
+## Getting the next value with `LEAD()`
+* Provides the ability to query the value from the next row
+* NextQuota column is created by using `LEAD()`
+* Requires the use of `ORDER BY` to order the rows
+
+![](https://telegra.ph/file/63e00b3a77837187766c4.png)
+
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+-- Create a window function to get the values from the next row
+    LEAD(CurrentQuota)
+    OVER (PARTITION BY SalesYear ORDER BY ModifiedDate) AS NextQuota,
+    ModifiedDate AS ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|NextQuota | ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |367000.00 |2011-04-15|
+>|Mary |2011 |367000.00 |556000.00 |2011-04-16|
+>|Mary |2011 |556000.00 |7000.00 |2011-07-15|
+>|Bob |2011 |7000.00 |NULL |2011-07-17|
+>|Bob |2012 |70000.00 |502000.00 |2012-01-15|
+>|Mary |2012 |502000.00 |154000.00 |2012-01-16|
+
+## Getting the previous value with `LAG()`
+* Provides the ability to query the value from the previous row
+* PreviousQuota column is created by using `LAG()`
+* Requires the use of `ORDER BY` to order the rows
+
+![](https://telegra.ph/file/d2235fba6be1cc88f9e9f.png)
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+-- Create a window function to get the values from the previous row
+    LAG(CurrentQuota)
+    OVER (PARTITION BY SalesYear ORDER BY ModifiedDate) AS PreviousQuota,
+    ModifiedDate AS ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|PreviousQuota |ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |NULL |2011-04-15|
+>|Mary |2011 |367000.00 |28000.00 |2011-04-16|
+>|Mary |2011 |556000.00 |367000.00 |2011-07-15|
+>|Bob |2011 |7000.00.00 |556000.00 |2011-07-17|
+>|Bob |2012 |7000.00 |NULL |2012-01-15|
+>|Mary |2012 |502000.00 |7000.00 |2012-01-16|
+>.      .       .
+
+## More complex WINDOW functions 
+```sql
+SELECT SalesPerson, SalesYear, CurrentQuota,
+SUM(CurrentQuota)
+OVER (PARTITION BY SalesYear) AS YearlyTotal,
+ModifiedDate as ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|YearlyTotal | ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |1551000.00 |2011-04-16|
+>|Bob |2011 |7000.00 |1551000.00 |2011-07-17|
+>|Bob |2011 |91000.00 |1551000.00 |2011-10-17|
+>|Mary |2011 |140000.00 |1551000.00 |2012-04-15|
+>|Mary |2011 |70000.00 |1551000.00 |2012-07-15|
+>|Mary |2011 |154000.00 |1551000.00 |2012-01-15|
+>|Mary |2012 |107000.00 |1859000.00 |2012-01-16|
+
+* `NOTE:` When we change column in or add `ORDER BY` we get new results
+
+##### Here, we are adding ORDER BY SalesPerson, causing the values in the YearlyTotal column to change whenever the SalesPerson is modified.
+
+```sql
+SELECT SalesPerson, SalesYear, CurrentQuota,
+SUM(CurrentQuota)
+OVER (PARTITION BY SalesYear ORDER BY SalesPerson) AS YearlyTotal,
+ModifiedDate as ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|YearTotal | ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |35000.00 |2011-04-16|
+>|Bob |2011 |7000.00 |35000.00 |2011-07-17|
+>|Mary |2011 |367000.00 |958000.00 |2011-10-17|
+>|Mary |2011 |556000.00 |958000.00 |2012-04-15|
+>|Bob |2012 |70000.00 |401000.00 |2012-07-15|
+>|Bob |2012 |154000.00 |401000.00 |2012-10-16|
+
+##### We are changing the ORDER BY column to ModifiedDate, and as a result, the values in the RunningTotal column are changing whenever the ModifiedDate (ModDate) is modified.
+
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+SUM(CurrentQuota)
+OVER (PARTITION BY SalesYear ORDER BY ModifiedDate) as RunningTotal,
+ModifiedDate as ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|RunningTotal| ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |28000.00 |2011-04-16|
+>|Mary |2011 |367000.00 |395000.00 |2011-07-17|
+>|Mary |2011 |556000.00 |951000.00 |2011-10-17|
+>|Bob |2011 |7000.00 |958000.00 |2012-04-15|
+>|Bob |2012 |70000.00 |70000.00 |2012-01-15|
+>|Mary |2012 |502000.00 |572000.00 |2012-01-16|
+
+## Adding row numbers
+* `ROW_NUMBER()` sequentially numbers the rows in the window
+* `ORDER BY` is required when using `ROW_NUMBER()`
+
+![](https://telegra.ph/file/040c29060cb7d5b7c3b54.png)
+
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    ROW_NUMBER()
+    OVER (PARTITION BY SalesPerson ORDER BY SalesYear) AS QuotabySalesPerson
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|QuotabySalesPerson|
+>|-|-|-|-|
+>|Bob |2011 |28000.00 |1 |
+>|Bob |2011 |7000.00 |2 |
+>|Bob |2011 |70000.00 |3 |
+>|Bob |2011 |154000.00 |4 |
+>|Bob |2012 |70000.00 |5 |
+>|Bob |2012 |107000.00 |6 |
+>|Bob |2012 |91000.00 |7 |
+>|Mary |2011 |367000.00 |1 |
+
+## Calculating statistics using Window functions
+
+### standard deviation `STDEV()`
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    STDEV(CurrentQuota)
+    OVER () AS StandardDev,
+    ModifiedDate AS ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|StandardDev | ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |267841.370964233 |2011-04-16|
+>|Bob |2011 |7000.00 |267841.370964233 |2011-07-17|
+>|Bob |2011 |91000.00 |267841.370964233 |2011-10-17|
+>|Bob |2012 |140000.00 |267841.370964233 |2012-01-15|
+>|Bob |2012 |70000.00 |267841.370964233 |2012-04-15|
+
+<br>
+
+```SQL
+SELECT SalesPerson, SalesYear, CurrentQuota,
+STDEV(CurrentQuota)
+OVER (PARTITION BY SalesYear ORDER BY SalesYear) AS StDev,
+ModifiedDate AS ModDate
+FROM SaleGoal
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|StDev | ModDate |
+>|-|-|-|-|-|
+>|Bob |2011 |28000.00 |267841.54080 |2011-04-16|
+>|Bob |2011 |7000.00 |267841.54080 |2011-07-17|
+>|Mary |2011 |91000.00 |267841.54080 |2011-04-16|
+>|Mary |2011 |140000.00 |267841.54080 |2011-07-15|
+>|Bob |2012 |70000.00 |246538.86248 |2012-01-15|
+>|Bob |2012 |154000.00 |246538.86248 |2012-04-15|
+>|Bob |2012 |107000.00 |246538.86248 |2012-07-16|
+
+### calculating mode 
+
+* Mode is the value which appears the most oen in your data
+* To calculate mode:
+    * Create a CTE containing an ordered count of values using ROW_NUMBER
+    * Write a query using the CTE to pick the value with the highest row number
+
+```sql
+WITH QuotaCount AS (
+SELECT SalesPerson, SalesYear, CurrentQuota,
+    ROW_NUMBER()
+    OVER (PARTITION BY CurrentQuota ORDER BY CurrentQuota) AS QuotaList
+FROM SaleGoal
+)
+SELECT * FROM QuotaCount
+```
+
+>|SalesPerson |SalesYear |CurrentQuota|QuotaList |
+>|-|-|-|-|
+>|Bob |2011 |7000.00 |1 |
+>|Bob |2011 |28000.00 |1 |
+>|Bob |2011 |70000.00 |1 |
+>|Bob |2012 |70000.00 |2 |
+>|Mary |2012 |73000.00 |1 |
+
+* Notice there are two values for `70,000.00`
+<br><br>
+
+```sql
+WITH QuotaCount AS (
+SELECT SalesPerson, SalesYear, CurrentQuota,
+       ROW_NUMBER()
+       OVER (PARTITION BY CurrentQuota ORDER BY CurrentQuota) AS QuotaList
+FROM SaleGoal
+)
+SELECT CurrentQuota, QuotaList AS Mode
+FROM QuotaCount
+WHERE QuotaList IN (SELECT MAX(QuotaList) FROM QuotaCount)
+```
+
+>|CurrentQuota|Mode |
+>|-|-|
+>|70000.00 |2 |
