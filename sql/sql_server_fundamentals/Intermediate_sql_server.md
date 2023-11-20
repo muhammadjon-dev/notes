@@ -1,7 +1,5 @@
-```py
-# Course Description
-# A majority of data is stored in databases and knowing the necessary tools needed to analyze and clean data directly in databases is indispensable. This course focuses on T-SQL, the version of SQL used in Microsoft SQL Server, needed for data analysis. You will learn several concepts in this course such as dealing with missing data, working with dates, and calculating summary statistics using advanced queries. After completing this course, you will have the skills needed to analyze data and provide insights quickly and easily.
-```
+
+`Course Description: A majority of data is stored in databases and knowing the necessary tools needed to analyze and clean data directly in databases is indispensable. This course focuses on T-SQL, the version of SQL used in Microsoft SQL Server, needed for data analysis. You will learn several concepts in this course such as dealing with missing data, working with dates, and calculating summary statistics using advanced queries. After completing this course, you will have the skills needed to analyze data and provide insights quickly and easily.`
 
 ## Detecting missing values
 * When you have no data, the empty database eld contains the word `NULL`
