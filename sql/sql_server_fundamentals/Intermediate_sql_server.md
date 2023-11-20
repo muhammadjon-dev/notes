@@ -635,6 +635,27 @@ FROM SaleGoal
 >|Bob |2012 |91000.00 |7 |
 >|Mary |2011 |367000.00 |1 |
 
+
+## More about ranking
+### The ranking functions
+* `ROW_NUMBER()` always assigns unique numbers, even if two rows' values are the same
+* `RANK()` assigns the same number to rows with identical values, skipping over the next numbers in such cases
+* `DENSE_RANK()` also assigns the same number to rows with identical values, but doesn't skip over the next numbers
+
+| Country | Games | Row_N | Rank_N | Dense_Rank_N |
+|---------|-------|-------|--------|--------------|
+| GBR | 27 | 1 | 1 | 1 |
+| DEN | 26 | 2 | 2 | 2 |
+| FRA | 26 | 3 | 2 | 2 |
+| ITA | 25 | 4 | 4 | 3 |
+| AUT | 24 | 5 | 5 | 4 |
+| BEL | 24 | 6 | 5 | 5 |
+| NOR | 22 | 7 | 7 | 5 |
+| POL | 20 | 8 | 8 | 6 |
+| ESP | 18 | 9 | 9 | 7 |
+
+
+
 ## Calculating statistics using Window functions
 
 ### standard deviation `STDEV()`
