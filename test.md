@@ -79,3 +79,19 @@ function add(num, num1){
 * [x] task list 1
 * [x] task list 1
 * [ ] task list 1
+
+> [!NOTE]
+> Some note here
+
+> [!TIP]
+> Some note here
+
+> [!IMPORTANT]
+> Some note here
+
+> [!WARNING]
+> Some note here
+
+
+> [!CAUTION]
+> Some note here
