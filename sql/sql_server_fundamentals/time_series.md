@@ -390,9 +390,181 @@ SELECT
 `CONVERT()`|`TRY_CONVERT()`
 `PARSE()`|`TRY_PARSE()`
 
-> ![NOTE]
+> [!NOTE]
 > If something happens wrong with converting date string to date then these safe functions will return NULL
 
+## Key aggregation functions
+**Counts**
+* `COUNT()`
+* `COUNT_BIG()`
+* `COUNT(DISTINCT)`
+
+**Other Aggregates**
+* `SUM()`
+* `MIN()`
+* `MAX()`
+
+### counts with `COUNT()`
+
+Number of Rows|Non-NULL Values
+|-|-|
+`COUNT(*)`|`COUNT(d.YR)`
+`COUNT(1)`|`COUNT(NULLIF(d.YR, 1990))`
+`COUNT(1/0)`|
+
+>[!tip]
+>`NULLIF()` returns `NULL` if the two expressions are equal; otherwise, it returns the first expression. 
+> Example: `NULLIF(10, 10)` > `NULL`; `NULLIF(20, 10)` > `20`.
+
+## Statistical aggregate functions
+|||
+|-|-|
+|AVG()|Mean
+STDEV()|Standard Deviation
+STDEVP()|Population Standard Deviation
+VAR()|Variance
+VARP()|Population Variance
+
+### calculating median
+```sql
+SELECT TOP(1)
+    PERCENTILE_CONT(0.5)
+        WITHIN GROUP (ORDER BY l.SomeVal DESC)
+        OVER () AS MedianIncidents
+FROM dbo.LargeTable l;
+```
+
+## Grouping by
+### `ROLLUP`, `CUBE`, and `GROUPING SETS`
+
+* `ROLLUP` - generates subtotals from left to right, producing results for each level of aggregation
+
+**EXAMPLE:**
+`ROLLUP(a, b)`
+|a|b|
+|-|-|
+|a1|b1|
+|a2|b2|
+|a3|b3|
+
+result:
+||||
+|-|-|-|
+|a1|b1|aggregation
+|a1|b2|aggregation
+|a1|b3|aggregation
+|a2|b1|aggregation
+|a2|b2|aggregation
+|a2|b3|aggregation
+|a3|b1|aggregation
+|a3|b2|aggregation
+|a3|b3|aggregation
+|a1|null|aggregation
+|a2|null|aggregation
+|a3|null|aggregation
+|null|null|aggregation
+
+```sql
+SELECT rental_rate, rating, COUNT(*)
+FROM film
+GROUP BY 
+    rental_rate, rating
+WITH ROLLUP
+ORDER BY rental_rate
+```
+
+|rental_rate|rating|count
+|-|-|-|
+0.99	|NC-17|	73|
+0.99	|G	|64
+0.99	|R	|70
+0.99	|PG	|62
+**0.99**	|**NULL**|	**341**
+0.99	|PG-13|	72
+2.99	|PG-13|	74
+2.99	|NC-17|	66
+2.99	|PG	|64
+2.99	|R	|60
+**2.99**	|**NULL**|	**323**
+2.99	|G	|59
+4.99	|R	|65
+4.99	|G	|55
+4.99	|NC-17|	71
+4.99	|PG-13|	77
+4.99	|PG	|68
+**4.99**	|**NULL**|	**336**
+**NULL**|**NULL**|		**1000**
 
 
+* `CUBE` is similar to ROLLUP but generates all possible combinations of grouping sets. It computes subtotals for all possible combinations of columns specified in the GROUP BY clause. It's more comprehensive than ROLLUP.
 
+**EXAMPLE:**
+`CUBE(a, b)`
+|a|b|
+|-|-|
+|a1|b1|
+|a2|b2|
+
+result:
+||||
+|-|-|-|
+|a1|b1|aggregation
+|a1|b2|aggregation
+|a2|b1|aggregation
+|a2|b2|aggregation
+|a1|null|aggregation
+|a2|null|aggregation
+|null|b1|aggregation
+|null|b2|aggregation
+|null|null|aggregation
+
+```SQL
+SELECT
+    t.IncidentType,
+    t.Office,
+    SUM(t.Events) AS Events
+FROM Table
+GROUP BY
+    t.IncidentType,
+    t.Office
+WITH CUBE
+ORDER BY
+    t.IncidentType,
+    t.Office;
+```
+
+IncidentType| Office| Events|
+|-|-|-|
+NULL |NULL| 250
+NULL |NY |70
+NULL |CT| 180
+T1 |NULL |55
+T1 |NY| 30
+T1 |CT |25
+
+* `GROUPING SETS` - allows the specification of multiple grouping sets within a single GROUP BY clause. Unlike ROLLUP and CUBE, it gives more control over which subsets of data you want to aggregate.
+
+```sql
+SELECT
+    t.IncidentType,
+    t.Office,
+    SUM(t.Events) AS Events
+FROM Table
+GROUP BY GROUPING SETS
+(
+    (t.IncidentType, t.Office),
+    ()
+)
+ORDER BY
+    t.IncidentType,
+    t.Office;
+```
+
+IncidentType| Office| Events|
+|-|-|-|
+T1 |NY| 30
+T1 |CT| 25
+T2 |NY| 10
+T2 |CT| 110
+T3 |NY| 30
+T3 |CT| 45
