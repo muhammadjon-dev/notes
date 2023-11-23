@@ -568,3 +568,215 @@ T2 |NY| 10
 T2 |CT| 110
 T3 |NY| 30
 T3 |CT| 45
+
+# WINDOW functions
+## Ranking functions
+* `ROW_NUMBER()` - 
+Unique, ascending integer value starting from 1.
+* `RANK()` - Ascending integer value starting from 1. Can
+have ties. Can skip numbers.
+* `DENSE_RANK()` - Ascending integer value starting from 1. Can have ties. Will not skip numbers.
+
+```sql
+SELECT
+    s.RunsScored,
+    ROW_NUMBER() OVER (
+        ORDER BY s.RunsScored DESC
+    ) AS rn,
+    RANK() OVER (
+        ORDER BY s.RunsScored DESC
+    ) AS rk,
+    DENSE_RANK() OVER (
+        ORDER BY s.RunsScored DESC
+    ) AS dr
+FROM dbo.Scores s
+ORDER BY
+    s.RunsScored DESC;
+```
+
+|RunsScored| rn|rk| dr|
+|-|-|-|-|
+8 |1|1| 1
+7 |2|2| 2
+7 |3|2| 2
+6 |4|4| 3
+6 |5|4| 3
+3 |6|6| 4
+
+### Partitions
+
+```sql
+SELECT
+    s.Team,
+    s.RunsScored,
+    ROW_NUMBER() OVER (
+        PARTITION BY s.Team
+        ORDER BY s.RunsScored DESC
+    ) AS rn
+FROM dbo.Scores s
+ORDER BY
+    s.RunsScored DESC;
+```
+
+Team| RunsScored| rn|
+|-|-|-|
+AZ |8| 1
+AZ |6| 2
+AZ |3| 3
+FLA |7| 1
+FLA |7| 2
+FLA |6| 3
+
+
+## Aggregate functions
+
+```sql
+SELECT
+    s.Team,
+    s.RunsScored,
+    MAX(s.RunsScored) OVER (
+        PARTITION BY s.Team
+    ) AS MaxRuns
+FROM dbo.Scores s
+ORDER BY
+    s.RunsScored DESC;
+```
+
+Team| RunsScored| MaxRuns|
+|-|-|-|
+AZ |8| 8
+AZ |6| 8
+AZ |3| 8
+FLA |7| 7
+FLA |7| 7
+FLA |6| 7
+
+## Aggregations with empty windows
+
+```sql
+SELECT
+    s.Team,
+    s.RunsScored,
+    MAX(s.RunsScored) OVER () AS MaxRuns
+FROM dbo.Scores s
+ORDER BY
+    s.RunsScored DESC;
+```
+
+Team| RunsScored| MaxRuns|
+|-|-|-|
+AZ |8| 8
+AZ |6| 8
+AZ |3| 8
+FLA |7| 8
+FLA |7| 8
+FLA |6| 8
+
+```sql
+SELECT
+    s.Team,
+    s.Game,
+    s.RunsScored,
+    SUM(s.RunsScored) OVER (
+        PARTITION BY s.Team
+        ORDER BY s.Game ASC
+        RANGE BETWEEN
+            UNBOUNDED PRECEDING
+            AND CURRENT ROW
+    ) AS TotalRuns, 
+    AVG(s.RunsScored) OVER (
+        PARTITION BY s.Team
+        ORDER BY s.Game ASC
+            ROWS BETWEEN 1 PRECEDING
+            AND CURRENT ROW
+    ) AS AvgRuns
+FROM #Scores s;
+```
+
+|Team| Game| RunsScored| TotalRuns|AvgRuns
+|-|-|-|-|-|
+|AZ |1| 8| 8|8
+|AZ |2| 6| 14|7
+|AZ |3| 3| 17|4
+|FLA |1| 7| 7|7
+|FLA |2| 7| 14|7
+|FLA |3| 6| 20|6
+
+## RANGE and ROWS
+* `RANGE`
+    * Specify a range of results
+    * "Duplicates" processed all at once
+    * Only supports `UNBOUNDED` and `CURRENT ROW`
+* `ROWS`
+    * Specify number of rows to include
+    * "Duplicates" processed a row at a time
+    * Supports `UNBOUNDED` , `CURRENT ROW` , and number of rows
+
+## `LAG()` and `LEAD()`
+```sql
+SELECT
+    dsr.CustomerID,
+    dsr.MonthStartDate,
+    LAG(dsr.NumberOfVisits, 2) OVER (PARTITION BY dsr.CustomerID ORDER BY dsr.MonthStartDate) AS Prior2,
+    LAG(dsr.NumberOfVisits, 1) OVER (PARTITION BY dsr.CustomerID ORDER BY dsr.MonthStartDate) AS Prior1,
+    dsr.NumberOfVisits, 
+    LEAD(dsr.NumberOfVisits, 1) OVER (PARTITION BY dsr.CustomerID ORDER BY dsr.MonthStartDate) AS Next1,
+    LEAD(dsr.NumberOfVisits, 2) OVER (PARTITION BY dsr.CustomerID ORDER BY dsr.MonthStartDate) AS Next2
+FROM dbo.DaySpaRollup dsr;
+```
+
+CustomerID| MonthStartDate| Prior2| Prior| NumberOfVisits|Next1|Next2|
+|-|-|-|-|-|-|-|
+1 |2018-12-01| NULL| NULL| 49| 117|104|
+1 |2019-01-01| NULL| 49| 117|  104|NULL|
+1 |2019-02-01| 49| 117| 104|   NULL|NULL|
+
+## Windows and filters
+
+```SQL
+SELECT
+    Date,
+    LAG(Val, 1) OVER(ORDER BY DATE) AS PriorVal,
+    Val
+FROM t;
+```
+Date| PriorVal| Val|
+|-|-|-|
+2019-01-01 |NULL| 3
+2019-01-02 |3| 6
+2019-01-03 |6| 4
+
+```SQL
+SELECT
+Date,
+LAG(Val, 1) OVER(ORDER BY DATE) AS PriorVal,
+Val
+FROM t
+WHERE
+t.Date > '2019-01-02';
+```
+Date| PriorVal| Val|
+|-|-|-|
+2019-01-03 |NULL| 4
+
+### Windows and filters and CTEs
+```SQL
+WITH records AS (
+    SELECT
+        Date,
+        LAG(Val, 1) OVER(ORDER BY Date) AS PriorVal,
+        Val
+    FROM t
+)
+SELECT
+    r.Date,
+    r.PriorVal,
+    r.Val
+FROM records r
+WHERE
+    r.Date > '2019-01-02';
+```
+
+Date| PriorVal| Val|
+|-|-|-|
+2019-01-03 |6| 4
