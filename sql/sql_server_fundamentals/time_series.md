@@ -286,7 +286,112 @@ FROM dbo.Calendar d
     ) AS fy;
 ```
 
+# Building dates from parts
 
+* `DATEFROMPARTS(year, month, day)`
+* `TIMEFROMPARTS(hour, minute, second, fraction, precision)`
+* `DATETIMEFROMPARTS(year, month, day, hour, minute, second, ms)`
+* `DATETIME2FROMPARTS(year, month, day, hour, minute, second, fraction, precision)`
+* `SMALLDATETIMEFROMPARTS(year, month, day, hour, minute)`
+* `DATETIMEOFFSETFROMPARTS(year, month, day, hour, minute, second, fraction, hour_offset, minute_offset, precision)`
+
+```sql
+SELECT
+DATETIMEFROMPARTS(1918, 11, 11, 05, 45, 17, 995) AS DT,
+DATETIME2FROMPARTS(1918, 11, 11, 05, 45, 17, 0, 0) AS DT20,
+DATETIME2FROMPARTS(1918, 11, 11, 05, 45, 17, 995, 3) AS DT23,
+DATETIME2FROMPARTS(1918, 11, 11, 05, 45, 17, 9951234, 7) AS DT27;
+
+```
+DT |DT20| DT23| DT27|
+|-|-|-|-|
+1918-11-11 054517.997 |1918-11-11 054517 |1918-11-11 054517.995| 1918-11-11 054517.9951234
+
+### offsets
+```sql
+SELECT
+    DATETIMEOFFSETFROMPARTS(2009, 08, 14, 21, 00, 00, 0, 5, 0, 0) AS IST,
+    DATETIMEOFFSETFROMPARTS(2009, 08, 14, 21, 00, 00, 0, 5, 30, 0) AT TIME ZONE 'UTC' AS UTC;
+```
+
+>IST |UTC
+>|-|-|
+>2009-08-14 210000 +0530 |2009-08-14 153000 +0000
+
+## Translating date strings
+
+* `CAST('09/14/99' AS DATE)`
+>1999-09-14
+* `CONVERT(DATETIME2(3), 'April 4, 2019 11:52:29.998 PM')`
+>2019-04-04 235229.998
+* `PARSE('25 Dezember 2014' AS DATE USING 'de-de') `
+> 2014-12-25
+
+Function| Conversions Per Second
+|-|-|
+`CONVERT()`| 251,997
+`CAST()` |240,347
+`PARSE()` |12,620
+
+## Setting languages
+```SQL
+SET LANGUAGE 'FRENCH'
+
+DECLARE
+    @FrenchDate NVARCHAR(30) = N'18 avril 2019',
+    @FrenchNumberDate NVARCHAR(30) = N'18/4/2019';
+
+SELECT
+    CAST(@FrenchDate AS DATETIME),
+    CAST(@FrenchNumberDate AS DATETIME);
+```
+>2019-04-18 00:00:00.000
+
+## DATETIMEOFFSET (date data type)
+### Components
+Date Part| Example|
+|-|-|
+Date |2019-04-10
+Time |12:59:02.3908505
+UTC Offset| -04:00
+
+>2019-04-10 12:59:02.3908505 -04:00
+
+### Changing offsets
+```sql
+DECLARE @SomeDate DATETIMEOFFSET =
+    '2019-04-10 12:59:02.3908505 -04:00';
+
+SELECT
+    SWITCHOFFSET(@SomeDate,'-07:00') AS LATime;
+```
+>|LATime|
+>|-|
+>2019-04-10 09:59:02.3908505 -07:00
+
+### Converting to DATETIMEOFFSET (`TODATETIMEOFFSET()`)
+
+```sql
+DECLARE @SomeDate DATETIME2(3) =
+    '2019-04-10 12:59:02.390';
+SELECT
+    TODATETIMEOFFSET(@SomeDate,'-04:00') AS EDT;
+```
+
+>EDT|
+>|-|
+>2019-04-10 12:59:02.390 -04:00
+
+## Error-safe date conversion functions
+
+"Unsafe" Functions|Safe Functions|
+|-|-|
+`CAST()`|`TRY_CAST()`
+`CONVERT()`|`TRY_CONVERT()`
+`PARSE()`|`TRY_PARSE()`
+
+> ![NOTE]
+> If something happens wrong with converting date string to date then these safe functions will return NULL
 
 
 
