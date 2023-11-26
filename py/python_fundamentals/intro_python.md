@@ -98,3 +98,43 @@ y = list(x)
 y = x[:]
 ```
 ![](https://telegra.ph/file/95deccfb69e5a6455aa0b.png)
+
+# Methods
+
+**Methods:** Functions that belong to objects
+![](https://telegra.ph/file/6c0fa2ca803219198892d.png)
+
+```py
+fam = ['lisa', 1.74,'emma', 1.68,'mom', 1.71,'dad', 1.86]
+
+
+print(fam.index("mom"))
+
+sister = 'liz'
+
+print(sister.capitalize())
+
+print(sister.replace("z", "sa"))
+```
+>4 <br>
+Liz<br>
+lisa<br>
+
+# Packages
+* Directory of Python Scripts
+* Each script = module
+* Specify functions, methods, types
+* Thousands of packages available
+    * NumPy
+    * Matplotlib
+    * scikit-learn
+
+## import package
+```py
+import numpy # numpy.array()
+# or
+import numpy as np # np.array()
+# or
+from numpy import array # array()
+```
+
