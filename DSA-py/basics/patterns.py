@@ -135,37 +135,115 @@ def pat12(n: int):
         for j in range(i, 0, -1):
             print(j, end='')
         print()
-pat12(4)
+# pat12(4)
 
 def pat13(n: int):
+    num=0
     for i in range(n):
-        for j in range(n):
-            pass
+        for j in range(i+1):
+            num+=1
+            print(num, end=' ')
+        print()
+
+# pat13(5)
 
 def pat14(n: int):
-    pass
+    for i in range(n):
+        num = 65
+        for j in range(i+1):
+            print(chr(num+j), end='')
+        print()
+
+# pat14(4)
 
 def pat15(n: int):
-    pass
+    for i in range(n):
+        num = 65
+        for j in range(n-i):
+            print(chr(num+j), end='')
+        print()
+
+# pat15(4)
 
 def pat16(n: int):
-    pass
+    for i in range(n):
+        num = 65
+        for j in range(i+1):
+            print(chr(num+i), end='')
+        print()
+
+# pat16(4)
 
 def pat17(n: int):
-    pass
+    num = 65
+    for i in range(n):
+        print(' '*(n-i), end='')
+        for k in range(i):
+            print(chr(num+k), end='')
+        print(chr(num+i), end='')
+        for k in range(i-1, -1, -1):
+            print(chr(num+k), end='')
+        print(' '*(n-i), end='')
+        print()
+        
+
+# pat17(5)
 
 def pat18(n: int):
-    pass
+    num = 65
+    for i in range(n):
+        for j in range(n-i-1, n):
+            print(chr(num+j), end=' ')
+        print()
+
+# pat18(5)
 
 def pat19(n: int):
-    pass
+    for i in range(n):
+        print('*'*(n-i), end='')
+        print(2*i*' ', end='')
+        print('*'*(n-i))
+        
+    for i in range(n-1, -1, -1):
+        print('*'*(n-i), end='')
+        print(2*i*' ', end='')
+        print('*'*(n-i))
+
+        
+# pat19(5)
 
 def pat20(n: int):
-    pass
+    for i in range(n-1, -1, -1):
+        print('*'*(n-i), end='')
+        print(2*i*' ', end='')
+        print('*'*(n-i))
 
+    for i in range(n):
+        print('*'*(n-i), end='')
+        print(2*i*' ', end='')
+        print('*'*(n-i))
+# pat20(5) 
+    
 def pat21(n: int):
-    pass
+    print('*'*n)
+    for i in range(n-2):
+        print('*', end='')
+        print((n-2)*' ', end='')
+        print('*')
+    print('*'*n)
+
+# pat21(4)
 
 def pat22(n: int):
-    pass
+    for i in range(2*n-1):
+        for j in range(2*n-1):
+            top = i
+            left = j
+            right = 2*n-2-j
+            down = 2*n-2-i
+            
+            val = min(min(top, left), min(right, down))
+            print(n-val, end='')
+        print()
 
+pat22(3)
